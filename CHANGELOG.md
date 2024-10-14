@@ -2,4 +2,10 @@
 
 v0.1.0: Cloning the original codebase from pfcafe/goapp repo, to work on the PF's knowledge assessment (Go).
 
-v0.1.1: Fixing printing issue (Problem 1) and also providing the minimum unit tests to provide a basic validation in the updated code.
+v0.1.1: Problem 1 -> Fixing printing issue and also providing the minimum unit tests to provide a basic validation in the updated code.
+
+v1.1.1: 
+    a. Feature A -> Modifing the random string generator to generate only hex values and verify its accuracy and resource usage by creating a test and a benchmark run.
+
+    b. Feature B -> Extent the API to also return the Hex value in WS connection.
+
