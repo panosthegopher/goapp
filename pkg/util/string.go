@@ -6,11 +6,16 @@ import (
 
 var randx = rand.NewSource(42)
 
+/*
+	Feature A:
+		The string generator generates only hex values now.
+*/
+
 // RandString returns a random string of length n.
-func RandString(n int) string {
-	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+func RandHexString(n int) string {
+	const hexBytes = "0123456789abcdef" // now contains only hexadecimal characters
 	const (
-		letterIdxBits = 6                    // 6 bits to represent a letter index
+		letterIdxBits = 4                    // Decreasing to 4 bits in order to represent 16 possible values
 		letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
 		letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 	)
@@ -21,8 +26,8 @@ func RandString(n int) string {
 		if remain == 0 {
 			cache, remain = randx.Int63(), letterIdxMax
 		}
-		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
-			b[i] = letterBytes[idx]
+		if idx := int(cache & letterIdxMask); idx < len(hexBytes) {
+			b[i] = hexBytes[idx]
 			i--
 		}
 		cache >>= letterIdxBits
