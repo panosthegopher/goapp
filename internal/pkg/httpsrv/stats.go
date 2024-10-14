@@ -1,6 +1,8 @@
 package httpsrv
 
-import "log"
+import (
+	"log"
+)
 
 type sessionStats struct {
 	id   string
@@ -17,9 +19,9 @@ func (w *sessionStats) inc() {
 
 func (s *Server) incStats(id string) {
 	// Find and increment.
-	for _, ws := range s.sessionStats {
-		if ws.id == id {
-			ws.inc()
+	for i := range s.sessionStats {
+		if s.sessionStats[i].id == id {
+			s.sessionStats[i].inc()
 			return
 		}
 	}
