@@ -31,7 +31,7 @@ func (s *Server) notifyWatchers(str string) {
 	// Send message to all watchers and increment stats.
 	for id := range s.watchers {
 		/*
-			Requirement 1:
+			Problem #1:
 				Starting a new goroutine for each watcher to send the message and inc the stats.
 				Now each watcher will process the message concurrently.
 				Important Note: The watchersLock mutex ensures thread safe access to the map 'watchers'.
