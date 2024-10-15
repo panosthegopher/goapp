@@ -30,7 +30,7 @@ func (s *Server) myRoutes() []Route {
 		},
 		/*
 			Changing the route of home to the root path ("/") to implement what it is mentioned in the README file
-			(A client connects on `localhost:8080`), plus the requirement of the Feature B, which was to show the Hex values
+			(A client connects on `localhost:8080`), plus the requirement of the Feature #B, which was to show the Hex values
 			when a browser opens a connection to `localhost:8080`.
 		*/
 		{

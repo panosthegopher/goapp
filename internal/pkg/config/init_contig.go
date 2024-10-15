@@ -38,3 +38,28 @@ func GetConfig() (string, string) {
 	return httpHost, httpPort
 
 }
+
+// Get the Pprof server configuration
+func GetPprofConfig() (bool, string, string) {
+
+	pprofConfig := ReadConfig()
+
+	pprofEnable := pprofConfig.PprofServer.Enable
+	pprorHost := pprofConfig.PprofServer.Host
+	pprofPort := fmt.Sprintf(":%d", pprofConfig.PprofServer.Port)
+
+	return pprofEnable, pprorHost, pprofPort
+
+}
+
+// Get the client configuration
+func GetClientConfig() (string, string) {
+
+	clientConfig := ReadConfig()
+
+	clientHost := clientConfig.Client.Host
+	clientPort := fmt.Sprintf(":%d", clientConfig.Client.Port)
+
+	return clientHost, clientPort
+
+}

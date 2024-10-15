@@ -1,7 +1,7 @@
 package watcher
 
 /*
-	Feature B:
+	Feature #B:
 		Counter struct now contains a HexValue field, in order to return the generated hex value.
 */
 
