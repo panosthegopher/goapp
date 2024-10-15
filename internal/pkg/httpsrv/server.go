@@ -2,6 +2,8 @@ package httpsrv
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"log"
 	"net/http"
 	"os"
@@ -11,19 +13,27 @@ import (
 	"goapp/internal/pkg/config"
 	"goapp/internal/pkg/watcher"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
-// Server struct to represent the HTTP server.
+/*
+	Problem #3 :
+		Using the 'gorilla/csrf' package to protect against CSRF attacks in this program. This package provides CSRF protection middleware for Go web applications.
+		This will automatically generate and validate CSRF tokens for our forms, ensuring that requests are legitimate and not forged.
+*/
+
+// Server is the HTTP server.
 type Server struct {
-	strChan      <-chan string               // String channel.
-	server       *http.Server                // Gorilla HTTP server.
-	watchers     map[string]*watcher.Watcher // Counter watchers (k: counterId).
-	watchersLock *sync.RWMutex               // Counter lock.
-	sessionStats []sessionStats              // Session stats.
-	quitChannel  chan struct{}               // Quit channel.
-	running      sync.WaitGroup              // Running goroutines.
+	strChan      <-chan string                   // String channel.
+	server       *http.Server                    // Gorilla HTTP server.
+	watchers     map[string]*watcher.Watcher     // Counter watchers (k: counterId).
+	watchersLock *sync.RWMutex                   // Counter lock.
+	sessionStats []sessionStats                  // Session stats.
+	quitChannel  chan struct{}                   // Quit channel.
+	running      sync.WaitGroup                  // Running goroutines.
+	csrfProtect  func(http.Handler) http.Handler // CSRF protection middleware.
 }
 
 func New(strChan <-chan string) *Server {
@@ -35,7 +45,17 @@ func New(strChan <-chan string) *Server {
 	s.sessionStats = []sessionStats{}
 	s.quitChannel = make(chan struct{})
 	s.running = sync.WaitGroup{}
+	s.csrfProtect = csrf.Protect([]byte("32-byte-long-auth-key"))
 	return &s
+}
+
+// Generate a CSRF token
+func generateCSRFToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(b), nil
 }
 
 func (s *Server) Start() error {
@@ -44,15 +64,23 @@ func (s *Server) Start() error {
 
 	// Register routes.
 	for _, route := range s.myRoutes() {
-		if route.Method == "ANY" {
-			r.Handle(route.Pattern, route.HFunc)
-		} else {
+		/*
+			Enhancement:
+				Using the "ANY" as an HTTP method in route handling seems a bit dangerous, from a security perspective.
+				An attacker can use this to exploit the application by sending requests to the server which are not expected.
+		*/
+		if route.Method == "GET" {
 			r.Handle(route.Pattern, route.HFunc).Methods(route.Method)
 			if route.Queries != nil {
 				r.Handle(route.Pattern, route.HFunc).Methods(route.Method).Queries(route.Queries...)
 			}
+		} else {
+			log.Printf("Unsupported HTTP method: %s for route: %s", route.Method, route.Pattern)
 		}
 	}
+	var csrfAuthKey = []byte("32-byte-long-auth-key")
+	// Wrap the router with the CSRF middleware.
+	csrfRouter := csrf.Protect(csrfAuthKey)(r)
 
 	/*
 		Enhancement:
@@ -70,7 +98,7 @@ func (s *Server) Start() error {
 		WriteTimeout: 10 * time.Second,
 		ReadTimeout:  10 * time.Second,
 		IdleTimeout:  10 * time.Second,
-		Handler:      handlers.CombinedLoggingHandler(os.Stdout, r),
+		Handler:      handlers.CombinedLoggingHandler(os.Stdout, csrfRouter),
 	}
 
 	// Start HTTP server.

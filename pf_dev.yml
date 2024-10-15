@@ -2,3 +2,12 @@
 Server:
   Host: "localhost"
   Port: 8080
+
+PprofServer:
+  Enable: True
+  Host: "localhost"
+  Port: 6060
+
+Client:
+  Host: "localhost"
+  Port: 8090

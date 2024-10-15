@@ -5,7 +5,7 @@ import (
 )
 
 /*
-	Feature A:
+	Feature #A:
 		The string generator generates only hex values. Providing Unit tests and benchmarks for the renamed 'RandHexString' function.
 		Unit tests can be executed from this directory with the following command:
 			go test -v

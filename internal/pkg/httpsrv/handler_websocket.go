@@ -11,7 +11,16 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Handler for the WebSocket
 func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
+
+	// Not implemented yet.
+	// Validate CSRF token.
+	// if !validateCSRFToken(r) {
+	// 	http.Error(w, "Invalid CSRF token", http.StatusForbidden)
+	// 	return
+	// }
+
 	// Create and start a watcher.
 	var watch = watcher.New()
 	if err := watch.Start(); err != nil {
@@ -27,6 +36,7 @@ func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 	var upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			return true
+			// Security Suggestion: We should never blindly trust 'any Origin' by return 'true' here.
 		},
 	}
 
@@ -35,7 +45,8 @@ func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 		s.error(w, http.StatusInternalServerError, fmt.Errorf("failed to upgrade connection: %w", err))
 		return
 	}
-	defer func() { _ = c.Close() }()
+	// defer func() { _ = c.Close() }()
+	defer c.Close()
 
 	log.Printf("websocket started for watcher %s\n", watch.GetWatcherId())
 	defer func() {
@@ -47,6 +58,7 @@ func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	// All done.
 	doneCh := make(chan struct{})
+
 	defer close(doneCh)
 
 	go func() {
@@ -78,7 +90,11 @@ func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case cv := <-watch.Recv():
-			data, _ := json.Marshal(cv)
+			data, err := json.Marshal(cv)
+			if err != nil {
+				log.Printf("failed to marshal message: %v\n", err)
+				continue
+			}
 			err = c.WriteMessage(websocket.TextMessage, data)
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
