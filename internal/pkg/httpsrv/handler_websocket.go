@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 
 	"goapp/internal/pkg/watcher"
 
@@ -53,6 +54,17 @@ func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("websocket stopped for watcher %s\n", watch.GetWatcherId())
 	}()
 
+	/*
+		Problem #2 :
+			By using goroutines to read and write messages, we are able to handle multiple clients concurrently.
+			This will allow us to read and write messages from the client without blocking the main thread.
+
+			By adding this WaitGroup as well, we are able to wait for all goroutines to finish before closing the connection.
+			Through this approach, we make sure that all concurrent operations are properly managed and that the function does
+			not exit sooner than it should, as it would might leave resources uncleaned.
+	*/
+	var wg sync.WaitGroup
+
 	// Read done.
 	readDoneCh := make(chan struct{})
 
@@ -61,12 +73,14 @@ func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	defer close(doneCh)
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		defer close(readDoneCh)
 		for {
 			select {
 			default:
-				_, p, err := c.ReadMessage()
+				_, message, err := c.ReadMessage()
 				if err != nil {
 					if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway, websocket.CloseNoStatusReceived) {
 						log.Printf("failed to read message: %v\n", err)
@@ -74,7 +88,7 @@ func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				var m watcher.CounterReset
-				if err := json.Unmarshal(p, &m); err != nil {
+				if err := json.Unmarshal(message, &m); err != nil {
 					log.Printf("failed to unmarshal message: %v\n", err)
 					continue
 				}
@@ -87,25 +101,33 @@ func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	for {
-		select {
-		case cv := <-watch.Recv():
-			data, err := json.Marshal(cv)
-			if err != nil {
-				log.Printf("failed to marshal message: %v\n", err)
-				continue
-			}
-			err = c.WriteMessage(websocket.TextMessage, data)
-			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					log.Printf("failed to write message: %v\n", err)
+	wg.Add(1)
+	// Starting a goroutine to write as well.
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case cv := <-watch.Recv():
+				data, err := json.Marshal(cv)
+				if err != nil {
+					log.Printf("failed to marshal message: %v\n", err)
+					continue
 				}
+				err = c.WriteMessage(websocket.TextMessage, data)
+				if err != nil {
+					if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+						log.Printf("failed to write message: %v\n", err)
+					}
+					return
+				}
+			case <-readDoneCh:
+				return
+			case <-s.quitChannel:
 				return
 			}
-		case <-readDoneCh:
-			return
-		case <-s.quitChannel:
-			return
 		}
-	}
+	}()
+
+	wg.Wait()
+
 }
