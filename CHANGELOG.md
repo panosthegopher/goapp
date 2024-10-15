@@ -9,3 +9,4 @@ v1.1.1:
 
     b. Feature B -> Extent the API to also return the Hex value in WS connection.
 
+v1.1.2: Providing an enhancement where reading values from a configuration file. This will be needed later for the pproof and client, as well as if/when this goApp was moved to the Cloud.

@@ -8,12 +8,14 @@ import (
 	"sync"
 	"time"
 
+	"goapp/internal/pkg/config"
 	"goapp/internal/pkg/watcher"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
+// Server struct to represent the HTTP server.
 type Server struct {
 	strChan      <-chan string               // String channel.
 	server       *http.Server                // Gorilla HTTP server.
@@ -52,9 +54,19 @@ func (s *Server) Start() error {
 		}
 	}
 
+	/*
+		Enhancement:
+			Reading configuration from the config file and setting the HTTP server address and port accordingly.
+	*/
+	httpHost, httpPort := config.GetConfig()
+	httpAddr := httpHost + httpPort
+
+	// Debug.
+	log.Printf("HTTP server listening on %s\n", httpAddr)
+
 	// Create HTTP server.
 	s.server = &http.Server{
-		Addr:         "localhost:8080",
+		Addr:         httpAddr,
 		WriteTimeout: 10 * time.Second,
 		ReadTimeout:  10 * time.Second,
 		IdleTimeout:  10 * time.Second,

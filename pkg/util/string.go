@@ -7,7 +7,7 @@ import (
 var randx = rand.NewSource(42)
 
 /*
-	Feature A:
+	Feature #A:
 		The string generator generates only hex values now.
 */
 

@@ -1,0 +1,4 @@
+# When a Host value is not provided, 'localhost' will be used
+Server:
+  Host: "localhost"
+  Port: 8080
