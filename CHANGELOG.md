@@ -13,3 +13,5 @@ v1.1.2: Providing an enhancement where reading values from a configuration file.
 v2.0.0: Adding a fix for the memory usage issue which has been observed during many WS sessions. Providing a solution for better performance on concurrent executions and without leaving resources uncleaned.
 
 v2.1.0: Contains a bugfix in Makefile.
+
+v2.2.0: Enhancements on the code structure, addition of comments and removal of unnecessary code.
