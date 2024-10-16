@@ -15,3 +15,5 @@ v2.0.0: Adding a fix for the memory usage issue which has been observed during m
 v2.1.0: Contains a bugfix in Makefile.
 
 v2.2.0: Enhancements on the code structure, addition of comments and removal of unnecessary code.
+
+v3.0.0: Including Feature C -> the new command line client as a separate application that opens a requested number of sessions simultaneously.

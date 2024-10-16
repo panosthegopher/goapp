@@ -51,15 +51,3 @@ func GetPprofConfig() (bool, string, string) {
 	return pprofEnable, pprorHost, pprofPort
 
 }
-
-// Get the client configuration
-func GetClientConfig() (string, string) {
-
-	clientConfig := ReadConfig()
-
-	clientHost := clientConfig.Client.Host
-	clientPort := fmt.Sprintf(":%d", clientConfig.Client.Port)
-
-	return clientHost, clientPort
-
-}
