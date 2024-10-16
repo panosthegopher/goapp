@@ -3,17 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	client "goapp/internal/app/client"
 	"goapp/internal/pkg/config"
 	"log"
-	"net/http"
 	"os"
 	"os/exec"
+	"sync"
 )
-
-func init() {
-	log.SetOutput(os.Stdout)
-	log.SetFlags(log.LstdFlags | log.Lmsgprefix | log.Lshortfile)
-}
 
 /*
 	Feature #C:
@@ -21,19 +17,14 @@ func init() {
 		which opens a requested number of sessions simultaneously.
 */
 
-func start(clientAddr string) {
-	resp, err := http.Get(clientAddr)
-	if err != nil {
-		log.Printf("Failed to open session: %v", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	log.Printf("Session opened to %s with status: %s", clientAddr, resp.Status)
+// Initialize the logger as doing for the server as well
+func init() {
+	log.SetOutput(os.Stdout)
+	log.SetFlags(log.LstdFlags | log.Lmsgprefix | log.Lshortfile)
 }
 
 // Get the return code of the curl command which returns the status of the server (goapp/http API)
-func getCurlReturnCode(url string) int {
+func getHttpServerHealthCheckState(url string) int {
 	cmd := exec.Command("curl", "-v", url)
 	err := cmd.Run()
 	if err != nil {
@@ -46,18 +37,14 @@ func getCurlReturnCode(url string) int {
 }
 
 func main() {
+	var wg sync.WaitGroup
 
-	/*
-		Enhancement:
-			Reading configuration from the config file and setting the pprof server configuration.
-	*/
-	clientHost, clientPort := config.GetClientConfig()
-	clientAddr := clientHost + clientPort
+	// Get the server address from the config
 	httpHost, httpPort := config.GetConfig()
 	httpAddr := httpHost + httpPort
 
-	// Check if the server is running
-	if getCurlReturnCode(httpAddr) != 0 {
+	// Check if the server is running by sending a health check request
+	if getHttpServerHealthCheckState(httpAddr) != 0 {
 		log.Fatalf("Server is not running on %s", httpAddr)
 	}
 
@@ -67,11 +54,10 @@ func main() {
 
 	fmt.Printf("Starting %d clients\n", *reps)
 
-	// Start the provided number of client in goroutines
-	for i := 0; i < *reps; i++ {
-		go start(clientAddr)
-	}
+	// Start the client where go routines included there
+	client.StartClient(*reps, httpAddr, &wg)
 
-	// Wait for the clients to finish
-	select {}
+	// Wait for all client routines to complete
+	wg.Wait()
+
 }
