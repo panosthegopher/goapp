@@ -140,3 +140,23 @@ func (s *Server) mainLoop() {
 		}
 	}
 }
+
+/*
+Problem #1:
+
+	Using a pointer for increasing the elements of the original slice.
+
+Also, improving code's readability and sequence of the Server's methods, by grouping them together here,
+instead of leaving the incStats() method in watcher.go.
+*/
+func (s *Server) incStats(id string) {
+	// Find and increment.
+	for i := range s.sessionStats {
+		if s.sessionStats[i].id == id {
+			s.sessionStats[i].inc()
+			return
+		}
+	}
+	// Not found, add new.
+	s.sessionStats = append(s.sessionStats, sessionStats{id: id, sent: 1})
+}
