@@ -55,7 +55,7 @@ func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	/*
-		Problem #2 :
+		Problem #2 & New Feature #3:
 			By using goroutines to read and write messages, we are able to handle multiple clients concurrently.
 			This will allow us to read and write messages from the client without blocking the main thread.
 
