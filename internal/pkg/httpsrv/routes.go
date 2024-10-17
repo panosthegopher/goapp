@@ -42,8 +42,25 @@ func (s *Server) myRoutes() []Route {
 	}
 }
 
+func validateCSRFToken(r *http.Request) bool {
+	token := r.Header.Get("X-CSRF-Token")
+	return token == "my-csrf-token"
+}
+
+/*
+Problem #3:
+
+	Adding the CSRF token validation into this wrapper as it is used from all handlers.
+	This ensures that the CSRF validation is applied to all requests.
+*/
 func (s *Server) handlerWrapper(handlerFunc func(http.ResponseWriter, *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			if !validateCSRFToken(r) {
+				http.Error(w, "Invalid CSRF token", http.StatusForbidden)
+				return
+			}
+		}
 		defer func() {
 			r := recover()
 			if r != nil {

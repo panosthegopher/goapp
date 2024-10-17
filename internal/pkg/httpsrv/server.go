@@ -20,8 +20,8 @@ import (
 
 /*
 	Problem #3 :
-		Using the 'gorilla/csrf' package to protect against CSRF attacks in this program. This package provides CSRF protection middleware for Go web applications.
-		This will automatically generate and validate CSRF tokens for our forms, ensuring that requests are legitimate and not forged.
+		Using the 'gorilla/csrf' package to protect against CSRF attacks in this program. This package provides CSRF protection middleware
+		for Go web applications. This will automatically generate and validate CSRF tokens for our forms, ensuring that requests are legit.
 */
 
 // Server is the HTTP server.
@@ -49,7 +49,7 @@ func New(strChan <-chan string) *Server {
 	return &s
 }
 
-// Generate a CSRF token
+// Generate a CSRF token - Using the crypto/rand package to generate a secure random token
 func generateCSRFToken() (string, error) {
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
@@ -78,9 +78,8 @@ func (s *Server) Start() error {
 			log.Printf("Unsupported HTTP method: %s for route: %s", route.Method, route.Pattern)
 		}
 	}
-	var csrfAuthKey = []byte("32-byte-long-auth-key")
-	// Wrap the router with the CSRF middleware.
-	csrfRouter := csrf.Protect(csrfAuthKey)(r)
+
+	csrfRouter := s.csrfProtect(r)
 
 	/*
 		Enhancement:
