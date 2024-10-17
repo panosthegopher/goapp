@@ -17,3 +17,5 @@ v2.1.0: Contains a bugfix in Makefile.
 v2.2.0: Enhancements on the code structure, addition of comments and removal of unnecessary code.
 
 v3.0.0: Including Feature C -> the new command line client as a separate application that opens a requested number of sessions simultaneously.
+
+v3.1.0: Provided some work on the Problem 3, but the final solution for this is incomplete.
