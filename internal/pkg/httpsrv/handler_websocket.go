@@ -15,13 +15,6 @@ import (
 // Handler for the WebSocket
 func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 
-	// Not implemented yet.
-	// Validate CSRF token.
-	// if !validateCSRFToken(r) {
-	// 	http.Error(w, "Invalid CSRF token", http.StatusForbidden)
-	// 	return
-	// }
-
 	// Create and start a watcher.
 	var watch = watcher.New()
 	if err := watch.Start(); err != nil {
@@ -57,7 +50,6 @@ func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 	/*
 		Problem #2 & New Feature #3:
 			By using goroutines to read and write messages, we are able to handle multiple clients concurrently.
-			This will allow us to read and write messages from the client without blocking the main thread.
 
 			By adding this WaitGroup as well, we are able to wait for all goroutines to finish before closing the connection.
 			Through this approach, we make sure that all concurrent operations are properly managed and that the function does
