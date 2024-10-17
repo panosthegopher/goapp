@@ -1,6 +1,8 @@
 package httpsrv
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"runtime/debug"
@@ -42,6 +44,29 @@ func (s *Server) myRoutes() []Route {
 	}
 }
 
+// Generate a CSRF token - Using the crypto/rand package to generate a secure random token
+func generateCSRFToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(b), nil
+}
+
+// Set the CSRF token in a cookie
+func setCSRFToken(w http.ResponseWriter) (string, error) {
+	token, err := generateCSRFToken()
+	if err != nil {
+		return "", err
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:  "csrf_token",
+		Value: token,
+		Path:  "/",
+	})
+	return token, nil
+}
+
 func validateCSRFToken(r *http.Request) bool {
 	token := r.Header.Get("X-CSRF-Token")
 	return token == "my-csrf-token"
@@ -55,7 +80,9 @@ Problem #3:
 */
 func (s *Server) handlerWrapper(handlerFunc func(http.ResponseWriter, *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
+		if r.Method == http.MethodGet {
+			setCSRFToken(w)
+		} else if r.Method == http.MethodPost {
 			if !validateCSRFToken(r) {
 				http.Error(w, "Invalid CSRF token", http.StatusForbidden)
 				return

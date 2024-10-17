@@ -2,8 +2,6 @@ package httpsrv
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"log"
 	"net/http"
 	"os"
@@ -47,15 +45,6 @@ func New(strChan <-chan string) *Server {
 	s.running = sync.WaitGroup{}
 	s.csrfProtect = csrf.Protect([]byte("32-byte-long-auth-key"))
 	return &s
-}
-
-// Generate a CSRF token - Using the crypto/rand package to generate a secure random token
-func generateCSRFToken() (string, error) {
-	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(b), nil
 }
 
 func (s *Server) Start() error {
